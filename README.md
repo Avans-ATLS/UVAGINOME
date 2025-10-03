@@ -1,8 +1,5 @@
-# ATLS/uvaginome
+# ATLS/UVAGINOME
 
-[![GitHub Actions CI Status](https://github.com/ATLS/uvaginome/actions/workflows/nf-test.yml/badge.svg)](https://github.com/ATLS/uvaginome/actions/workflows/nf-test.yml)
-[![GitHub Actions Linting Status](https://github.com/ATLS/uvaginome/actions/workflows/linting.yml/badge.svg)](https://github.com/ATLS/uvaginome/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
-[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
 
 [![Nextflow](https://img.shields.io/badge/version-%E2%89%A524.10.5-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
 [![nf-core template version](https://img.shields.io/badge/nf--core_template-3.3.2-green?style=flat&logo=nfcore&logoColor=white&color=%2324B064&link=https%3A%2F%2Fnf-co.re)](https://github.com/nf-core/tools/releases/tag/3.3.2)
@@ -13,25 +10,19 @@
 
 ## Introduction
 
-**ATLS/uvaginome** is a bioinformatics pipeline that ...
+**ATLS/UVAGINOME** is a bioinformatics pipeline for ONT sequencing reads that can perform host depletion based on a reference genome and taxonomically classifies the remaining reads. It also performs QC on your reads, and creates visualizations of the found taxonomy.
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+A visual overview of the steps performed by the pipeline:
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+![Metrochart](https://github.com/Avans-ATLS/UVAGINOME/blob/master/uvaginome_pipeline_metrochart.png)
+
+<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
 
 First, prepare a samplesheet with your input data that looks as follows:
 
@@ -62,7 +53,7 @@ nextflow run ATLS/uvaginome \
 
 ## Credits
 
-ATLS/uvaginome was originally written by Birgit Rijvers-van Pruissen.
+ATLS/UVAGINOME was originally written by Birgit Rijvers-van Pruissen.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
