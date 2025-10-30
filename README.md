@@ -14,7 +14,7 @@
 
 A visual overview of the steps performed by the pipeline:
 
-![Metrochart](https://github.com/Avans-ATLS/UVAGINOME/blob/master/uvaginome_pipeline_metrochart.png)
+![Metrochart](https://github.com/Avans-ATLS/UVAGINOME/blob/master/uvaginome_pipeline_ampliconswitch_metrochart.png)
 
 <!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
 
