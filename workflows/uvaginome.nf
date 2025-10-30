@@ -3,7 +3,17 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_RAW          } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_PASS         } from '../modules/nf-core/fastqc/main'
+include { PORECHOP_PORECHOP             } from '../modules/nf-core/porechop/porechop/main'
+include { FILTLONG                      } from '../modules/nf-core/filtlong/main'   
+include { KRAKEN2_BUILDSTANDARD         } from '../modules/nf-core/kraken2/buildstandard/main'
+include { KRAKEN2_KRAKEN2               } from '../modules/nf-core/kraken2/kraken2/main'
+include { BRACKEN_BUILD                 } from '../modules/nf-core/bracken/build/main'
+include { BRACKEN_BRACKEN               } from '../modules/nf-core/bracken/bracken/main'
+include { KRAKENTOOLS_KREPORT2KRONA as KRAKENTOOLS_KREPORT2KRONA_KR } from '../modules/nf-core/krakentools/kreport2krona/main'
+include { KRONA_KTIMPORTTEXT as KRONA_KTIMPORTTEXT_KR              } from '../modules/nf-core/krona/ktimporttext/main'
+include { KRAKENTOOLS_KREPORT2KRONA as KRAKENTOOLS_KREPORT2KRONA_BR } from '../modules/nf-core/krakentools/kreport2krona/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -24,14 +34,156 @@ workflow UVAGINOME {
 
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
+
     //
-    // MODULE: Run FastQC
+    // MODULE: Run FastQC on raw reads
     //
-    FASTQC (
+    FASTQC_RAW (
+        ch_samplesheet
+    ) 
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_versions = ch_versions.mix(FASTQC_RAW.out.versions.first())
+
+    //
+    // MODULE: Run Porechop
+    //
+    PORECHOP_PORECHOP (
         ch_samplesheet
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    ch_versions = ch_versions.mix(PORECHOP_PORECHOP.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(PORECHOP_PORECHOP.out.log.collect{it[1]}.ifEmpty([]))
+    
+    //
+    // MODULE: Run filtlong
+    //
+    FILTLONG ( 
+        PORECHOP_PORECHOP.out.reads.map { meta, reads -> [ meta, [], reads ] }
+    )
+    ch_versions = ch_versions.mix(FILTLONG.out.versions)
+    // If reads already fall below target after filtering, results are not added to multiqc report
+    ch_multiqc_files = ch_multiqc_files.mix(FILTLONG.out.log.collect{it[1]}.ifEmpty([]))
+
+    //
+    // MODULE: Run FastQC on QCed reads
+    //
+    FASTQC_PASS (
+        FILTLONG.out.reads
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PASS.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_versions = ch_versions.mix(FASTQC_PASS.out.versions.first())
+
+    // ================================================================
+    // CONDITIONAL ROUTING: Host depletion vs Amplicon data
+    // ================================================================
+    
+    // Initialize analysis reads channel
+    ch_analysis_ready_reads = Channel.empty()
+    
+    if (params.amplicon) {
+        log.info "Amplicon data: Skipping host depletion"
+        // For amplicon data, use QC-passed reads directly
+        ch_analysis_ready_reads = FILTLONG.out.reads
+        
+    } else {
+        log.info "Metagenomic data: Running host depletion"
+        //
+        // SUBWORKFLOW: Run host depletion on non-amplicon reads
+        //
+        HOST_DEPLETION(
+            FILTLONG.out.reads
+        )
+        ch_versions = ch_versions.mix(HOST_DEPLETION.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(HOST_DEPLETION.out.multiqc_files)
+        
+        // Use host-depleted reads for analysis
+        ch_analysis_ready_reads = HOST_DEPLETION.out.reads
+    }
+
+    // Check if Kraken2 database is provided
+    if (!params.kraken2_db) {
+        //
+        // MODULE: Run Kraken2 buildstandard
+        //
+        KRAKEN2_BUILDSTANDARD (
+            false
+        )
+        ch_versions = ch_versions.mix(KRAKEN2_BUILDSTANDARD.out.versions)
+        ch_kraken2_db = KRAKEN2_BUILDSTANDARD.out.db
+    }
+    else {
+        // Use provided Kraken2 database
+        ch_kraken2_db = Channel.value([params.kraken2_db])
+    }
+
+    // Check if bracken database is provided
+    if (!params.bracken_db) {
+        //
+        // MODULE: Run Bracken build
+        //
+        BRACKEN_BUILD (
+            ch_kraken2_db
+        )
+        ch_versions = ch_versions.mix(BRACKEN_BUILD.out.versions)
+        ch_bracken_db = BRACKEN_BUILD.out.db
+    }
+    else {
+        // Use provided bracken database
+        ch_bracken_db = Channel.value([params.bracken_db])
+    }
+
+    // 
+    // MODULE: Run Kraken2
+    //
+    KRAKEN2_KRAKEN2 (
+        ch_analysis_ready_reads,
+        ch_kraken2_db,
+        false,
+        false
+    )
+    ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(KRAKEN2_KRAKEN2.out.report.collect{it[1]}.ifEmpty([]))
+
+    // 
+    // MODULE: Run Bracken
+    //
+    BRACKEN_BRACKEN (
+        KRAKEN2_KRAKEN2.out.report,
+        ch_bracken_db
+    )
+    ch_versions = ch_versions.mix(BRACKEN_BRACKEN.out.versions)
+    ch_multiqc_files = ch_multiqc_files.mix(BRACKEN_BRACKEN.out.txt.collect{it[1]}.ifEmpty([]))
+
+    //
+    // MODULE: Run KrakenTools kreport2krona for kraken2
+    //
+    KRAKENTOOLS_KREPORT2KRONA_KR (
+        KRAKEN2_KRAKEN2.out.report
+    )
+    ch_versions = ch_versions.mix(KRAKENTOOLS_KREPORT2KRONA_KR.out.versions)
+
+    //
+    // MODULE: Run Krona ktimporttext for kraken2
+    //
+    KRONA_KTIMPORTTEXT_KR (
+        KRAKENTOOLS_KREPORT2KRONA_KR.out.txt
+    )
+    ch_versions = ch_versions.mix(KRONA_KTIMPORTTEXT_KR.out.versions)
+
+    //
+    // MODULE: Run KrakenTools kreport2krona for bracken
+    //
+    KRAKENTOOLS_KREPORT2KRONA_BR (
+        BRACKEN_BRACKEN.out.txt
+    )
+    ch_versions = ch_versions.mix(KRAKENTOOLS_KREPORT2KRONA_BR.out.versions)
+
+    //
+    // MODULE: Run Krona ktimporttext for bracken
+    //
+    KRONA_KTIMPORTTEXT_BR (
+        KRAKENTOOLS_KREPORT2KRONA_BR.out.txt
+    )
+    ch_versions = ch_versions.mix(KRONA_KTIMPORTTEXT_BR.out.versions)
 
     //
     // Collate and save software versions
