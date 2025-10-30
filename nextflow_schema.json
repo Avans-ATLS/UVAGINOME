@@ -5,6 +5,36 @@
     "description": "Pipeline that performs taxonomic classification on metagenomic or amplicon ONT sequence data. Developed for Unravelling the Vaginome project",
     "type": "object",
     "$defs": {
+        "database_reference_options": {
+            "title": "Database/reference options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "fasta": {
+                    "type": "string",
+                    "default": "/home/birgit/db_ref/ref_genomes/GCF_000001405.26_GRCh38_genomic.fna",
+                    "fa_icon": "fas fa-dna",
+                    "description": "Path to host reference genome fasta to perform host depletion."
+                },
+                "minimap2_index": {
+                    "type": "string",
+                    "fa_icon": "fas fa-file",
+                    "description": "Path to minimap2 index of host reference genome to perform host depletion.",
+                    "help_text": ""
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to Kraken2 database for taxonomic classification."
+                },
+                "bracken_db": {
+                    "type": "string",
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to Bracken database for re-calculation of taxonomic classification results."
+                }
+            }
+        },
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
@@ -12,6 +42,11 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "required": ["input", "outdir"],
             "properties": {
+                "amplicon": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-bullseye",
+                    "description": "Flag to skip host-depletion for targeted/amplicon data."
+                },
                 "input": {
                     "type": "string",
                     "format": "file-path",
@@ -162,6 +197,9 @@
         }
     },
     "allOf": [
+        {
+            "$ref": "#/$defs/database_reference_options"
+        },
         {
             "$ref": "#/$defs/input_output_options"
         },
