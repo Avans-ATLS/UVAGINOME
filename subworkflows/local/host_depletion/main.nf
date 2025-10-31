@@ -4,12 +4,12 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { MINIMAP2_ALIGN                } from '../modules/nf-core/minimap2/align/main'
-include { MINIMAP2_INDEX                } from '../modules/nf-core/minimap2/index/main'
-include { SAMTOOLS_FLAGSTAT             } from '../modules/nf-core/samtools/flagstat/main' 
-include { SAMTOOLS_VIEW                 } from '../modules/nf-core/samtools/view/main'
-include { SAMTOOLS_FASTQ                } from '../modules/nf-core/samtools/fastq/main'
-include { FASTQC as FASTQC_UNMAPPED     } from '../modules/nf-core/fastqc/main'
+include { MINIMAP2_ALIGN                } from '../../../modules/nf-core/minimap2/align/main'
+include { MINIMAP2_INDEX                } from '../../../modules/nf-core/minimap2/index/main'
+include { SAMTOOLS_FLAGSTAT             } from '../../../modules/nf-core/samtools/flagstat/main' 
+include { SAMTOOLS_VIEW                 } from '../../../modules/nf-core/samtools/view/main'
+include { SAMTOOLS_FASTQ                } from '../../../modules/nf-core/samtools/fastq/main'
+include { FASTQC as FASTQC_UNMAPPED     } from '../../../modules/nf-core/fastqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,9 +59,7 @@ workflow HOST_DEPLETION {
     // MODULE: Run Minimap2 align
     //
     MINIMAP2_ALIGN(
-        // FILTLONG.out.reads,
-        // PORECHOP_PORECHOP.out.reads,
-        ch_samplesheet,
+        ch_reads,
         ch_minimap2_index,
         true,
         "bai",
@@ -89,7 +87,8 @@ workflow HOST_DEPLETION {
         // Empty list for reference fasta and meta
         [[],[]],
         // Empty list for qname
-        []
+        [],
+        ""
     )
     ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions)
     ch_unmapped_reads = SAMTOOLS_VIEW.out.bam

@@ -1,25 +1,31 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
+    IMPORT MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC as FASTQC_RAW          } from '../modules/nf-core/fastqc/main'
-include { FASTQC as FASTQC_PASS         } from '../modules/nf-core/fastqc/main'
-include { PORECHOP_PORECHOP             } from '../modules/nf-core/porechop/porechop/main'
-include { FILTLONG                      } from '../modules/nf-core/filtlong/main'   
-include { KRAKEN2_BUILDSTANDARD         } from '../modules/nf-core/kraken2/buildstandard/main'
-include { KRAKEN2_KRAKEN2               } from '../modules/nf-core/kraken2/kraken2/main'
-include { BRACKEN_BUILD                 } from '../modules/nf-core/bracken/build/main'
-include { BRACKEN_BRACKEN               } from '../modules/nf-core/bracken/bracken/main'
+include { FASTQC as FASTQC_RAW                                      } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_PASS                                     } from '../modules/nf-core/fastqc/main'
+include { PORECHOP_PORECHOP                                         } from '../modules/nf-core/porechop/porechop/main'
+include { FILTLONG                                                  } from '../modules/nf-core/filtlong/main'   
+include { KRAKEN2_BUILDSTANDARD                                     } from '../modules/nf-core/kraken2/buildstandard/main'
+include { KRAKEN2_KRAKEN2                                           } from '../modules/nf-core/kraken2/kraken2/main'
+include { BRACKEN_BUILD                                             } from '../modules/nf-core/bracken/build/main'
+include { BRACKEN_BRACKEN                                           } from '../modules/nf-core/bracken/bracken/main'
 include { KRAKENTOOLS_KREPORT2KRONA as KRAKENTOOLS_KREPORT2KRONA_KR } from '../modules/nf-core/krakentools/kreport2krona/main'
-include { KRONA_KTIMPORTTEXT as KRONA_KTIMPORTTEXT_KR              } from '../modules/nf-core/krona/ktimporttext/main'
+include { KRONA_KTIMPORTTEXT as KRONA_KTIMPORTTEXT_KR               } from '../modules/nf-core/krona/ktimporttext/main'
 include { KRAKENTOOLS_KREPORT2KRONA as KRAKENTOOLS_KREPORT2KRONA_BR } from '../modules/nf-core/krakentools/kreport2krona/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
-include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_uvaginome_pipeline'
-
+include { KRONA_KTIMPORTTEXT as KRONA_KTIMPORTTEXT_BR               } from '../modules/nf-core/krona/ktimporttext/main'
+include { MULTIQC                                                   } from '../modules/nf-core/multiqc/main'
+include { paramsSummaryMap                                          } from 'plugin/nf-schema'
+include { paramsSummaryMultiqc                                      } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { softwareVersionsToYAML                                    } from '../subworkflows/nf-core/utils_nfcore_pipeline'
+include { methodsDescriptionText                                    } from '../subworkflows/local/utils_nfcore_uvaginome_pipeline'
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORT SUBWORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+include { HOST_DEPLETION } from '../subworkflows/local/host_depletion/main'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
