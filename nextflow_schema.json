@@ -5,6 +5,64 @@
     "description": "Pipeline that performs taxonomic classification on metagenomic or amplicon ONT sequence data. Developed for Unravelling the Vaginome project",
     "type": "object",
     "$defs": {
+        "quality_control_options": {
+            "title": "Quality control options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "fa_icon": "fas fa-tasks",
+            "properties": {
+                "qc_keeppercent": {
+                    "type": "integer",
+                    "default": 90,
+                    "fa_icon": "fas fa-percent",
+                    "description": "Filtlong: Keep only this percentage of the best reads (measured by bases)."
+                },
+                "qc_targetbases": {
+                    "type": "integer",
+                    "default": 1000000,
+                    "fa_icon": "fas fa-bullseye",
+                    "description": "Filtlong: Keep only the best reads up to this many total bases(unit suffixes: k, kb, m, mb, g, gb)."
+                },
+                "qc_minlength": {
+                    "type": "integer",
+                    "default": 100,
+                    "fa_icon": "fas fa-arrow-right",
+                    "description": "Filtlong: Minimum length threshold (unit suffixes: k, kb, m, mb, g, gb)."
+                }
+            }
+        },
+        "database_reference_options": {
+            "title": "Database/reference options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "fasta": {
+                    "type": "string",
+                    "default": "/home/birgit/db_ref/ref_genomes/GCF_000001405.26_GRCh38_genomic.fna",
+                    "fa_icon": "fas fa-dna",
+                    "description": "Path to host reference genome fasta to perform host depletion."
+                },
+                "minimap2_index": {
+                    "type": "string",
+                    "fa_icon": "fas fa-file",
+                    "description": "Path to minimap2 index of host reference genome to perform host depletion.",
+                    "default": "/home/birgit/db_ref/dbs/mmap2/GRCh38.mmi"
+                },
+                "kraken2_db": {
+                    "type": "string",
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to Kraken2 database for taxonomic classification."
+                },
+                "bracken_db": {
+                    "type": "string",
+                    "fa_icon": "fas fa-database",
+                    "description": "Path to Bracken database for re-calculation of taxonomic classification results."
+                }
+            },
+            "fa_icon": "fas fa-server"
+        },
         "input_output_options": {
             "title": "Input/output options",
             "type": "object",
@@ -12,6 +70,11 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "required": ["input", "outdir"],
             "properties": {
+                "amplicon": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-bullseye",
+                    "description": "Flag to skip host-depletion for targeted/amplicon data."
+                },
                 "input": {
                     "type": "string",
                     "format": "file-path",
@@ -162,6 +225,12 @@
         }
     },
     "allOf": [
+        {
+            "$ref": "#/$defs/quality_control_options"
+        },
+        {
+            "$ref": "#/$defs/database_reference_options"
+        },
         {
             "$ref": "#/$defs/input_output_options"
         },
