@@ -35,6 +35,9 @@ The steps in the pipeline are:
 
 ## Usage
 
+### Installation
+Clone this repository locally, and use the path to it to run the pipeline.
+
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
@@ -50,19 +53,21 @@ BRVP_PVPR_0705,BRVP_PVPR_0705.fastq.gz
 
 Each row represents a fastq file (single-end).
 
+To avoid creating the samplesheet manually, use the provided [samplesheeter.py](https://github.com/Avans-ATLS/UVAGINOME/tree/master/ssheeter/) script. See the [README](https://github.com/Avans-ATLS/UVAGINOME/tree/master/ssheeter/README.md) of the script for instructions.
+
 Now, you can run the pipeline using:
 
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 For metagenomic data:
 ```bash
-nextflow run ATLS/uvaginome \
+nextflow run <PATH_TO_PIPELINE_DIR> \
    -profile <docker/singularity/conda/institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
 ```
 For amplicon data:
 ```bash
-nextflow run ATLS/uvaginome \
+nextflow run <PATH_TO_PIPELINE_DIR> \
    -profile <docker/singularity/conda/institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR> \
@@ -76,7 +81,7 @@ nextflow run ATLS/uvaginome \
 
 ATLS/UVAGINOME was originally written by Birgit Rijvers-van Pruissen.
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+<!-- We thank the following people for their extensive assistance in the development of this pipeline: -->
 
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
