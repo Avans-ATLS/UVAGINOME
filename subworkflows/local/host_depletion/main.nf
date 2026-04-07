@@ -3,13 +3,9 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-include { MINIMAP2_ALIGN                } from '../../../modules/nf-core/minimap2/align/main'
-include { MINIMAP2_INDEX                } from '../../../modules/nf-core/minimap2/index/main'
-include { SAMTOOLS_FLAGSTAT             } from '../../../modules/nf-core/samtools/flagstat/main' 
-include { SAMTOOLS_VIEW                 } from '../../../modules/nf-core/samtools/view/main'
-include { SAMTOOLS_FASTQ                } from '../../../modules/nf-core/samtools/fastq/main'
-include { FASTQC as FASTQC_UNMAPPED     } from '../../../modules/nf-core/fastqc/main'
+include { HOSTILE_FETCH                 } from '../modules/nf-core/hostile/fetch/main'  
+include { HOSTILE_CLEAN                 } from '../../../modules/nf-core/hostile/clean/main' 
+include { FASTQC as FASTQC_MAPPED       } from '../../../modules/nf-core/fastqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,85 +30,47 @@ workflow HOST_DEPLETION {
     
     main:
     ch_versions = Channel.empty()
-    ch_minimap2_index = Channel.empty()
-    ch_minimap2_out = Channel.empty()
+    ch_hostile_index = Channel.empty()
+    ch_hostile_out = Channel.empty()
     ch_unmapped_reads = Channel.empty()
     ch_multiqc_files = Channel.empty()
 
-    // Check if Minimap2 index is provided
-    if (!params.minimap2_index) {
-        //
-        // MODULE: Run Minimap2 index
-        //
-        MINIMAP2_INDEX(
-            ch_fasta
+    // Check if hostile index is provided by user
+    if (params.hostile_index) {
+        log.info "Using user-provided hostile index: ${params.hostile_index}"
+        ch_hostile_index = Channel.fromPath(params.hostile_index, checkIfExists: true)
+            .map{ it -> [it[0].getSimpleName(), it[0]] }
+    } else {
+        log.info "No hostile index provided. Fetching host genome from NCBI using Hostile fetch."
+        HOSTILE_FETCH(
+            "human-t2t"
+            // minimap2 index arg in conf/modules.config
         )
-        ch_versions = ch_versions.mix(MINIMAP2_INDEX.out.versions)
-        ch_minimap2_index = MINIMAP2_INDEX.out.index
-    }
-    else {
-        // Use provided Minimap2 index if provided
-        ch_minimap2_index = Channel.value([[id:'input_genome_index'], params.minimap2_index])
+        ch_versions = ch_versions.mix(HOSTILE_FETCH.out.versions)
+        ch_hostile_index = HOSTILE_FETCH.out.reference
     }
 
     //
-    // MODULE: Run Minimap2 align
+    // MODULE: Run Hostile clean to remove host reads
     //
-    MINIMAP2_ALIGN(
+    HOSTILE_CLEAN (
         ch_reads,
-        ch_minimap2_index,
-        true,
-        "bai",
-        false,
-        false
+        ch_hostile_index
     )
-    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions.first())
-    // Create channel with mapping outputs, metadata and empty list for reference
-    ch_minimap2_out = MINIMAP2_ALIGN.out.bam.map {meta, reads ->[meta, reads, []] }
-
-    //
-    // MODULE: Run Samtools flagstat
-    //
-    SAMTOOLS_FLAGSTAT (
-        ch_minimap2_out
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_FLAGSTAT.out.versions)
-    ch_multiqc_files = ch_multiqc_files.mix(SAMTOOLS_FLAGSTAT.out.flagstat.collect{it[1]}.ifEmpty([]))
-
-    //
-    // MODULE: Run Samtools view to extract unmapped reads
-    //
-    SAMTOOLS_VIEW (
-        ch_minimap2_out,
-        // Empty list for reference fasta and meta
-        [[],[]],
-        // Empty list for qname
-        [],
-        ""
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_VIEW.out.versions)
-    ch_unmapped_reads = SAMTOOLS_VIEW.out.bam
-
-    //
-    // MODULE: Run Samtools fastq to convert unmapped reads to FASTQ
-    //
-    SAMTOOLS_FASTQ (
-        ch_unmapped_reads, 
-        false 
-        )
-    ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
+    ch_versions = ch_versions.mix(HOSTILE_CLEAN.out.versions)
+    ch_hostile_out = ch_hostile_out.mix(HOSTILE_CLEAN.out.fastq)
 
     // 
-    // MODULE: Run FastQC on unmapped reads
+    // MODULE: Run FastQC on mapped reads
     //
-    FASTQC_UNMAPPED (
-        SAMTOOLS_FASTQ.out.fastq
+    FASTQC_MAPPED (
+        ch_hostile_out
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_UNMAPPED.out.zip.collect{it[1]}.ifEmpty([]))
-    ch_versions = ch_versions.mix(FASTQC_UNMAPPED.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_MAPPED.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_versions = ch_versions.mix(FASTQC_MAPPED.out.versions.first())
 
     emit:
-    reads         = SAMTOOLS_FASTQ.out.other       // Non-host reads for downstream analysis
+    reads = ch_hostile_out // host depleted reads
     versions      = ch_versions                    // Software versions
     multiqc_files = ch_multiqc_files               // Files for MultiQC
 }
