@@ -50,33 +50,33 @@ workflow UVAGINOME {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_RAW.out.zip.collect{it[1]}.ifEmpty([]))
     ch_versions = ch_versions.mix(FASTQC_RAW.out.versions.first())
 
-    //
-    // MODULE: Run Porechop
-    //
-    PORECHOP_PORECHOP (
-        ch_samplesheet
-    )
-    ch_versions = ch_versions.mix(PORECHOP_PORECHOP.out.versions)
-    ch_multiqc_files = ch_multiqc_files.mix(PORECHOP_PORECHOP.out.log.collect{it[1]}.ifEmpty([]))
+    // //
+    // // MODULE: Run Porechop
+    // //
+    // PORECHOP_PORECHOP (
+    //     ch_samplesheet
+    // )
+    // ch_versions = ch_versions.mix(PORECHOP_PORECHOP.out.versions)
+    // ch_multiqc_files = ch_multiqc_files.mix(PORECHOP_PORECHOP.out.log.collect{it[1]}.ifEmpty([]))
     
-    //
-    // MODULE: Run filtlong
-    //
-    FILTLONG ( 
-        PORECHOP_PORECHOP.out.reads.map { meta, reads -> [ meta, [], reads ] }
-    )
-    ch_versions = ch_versions.mix(FILTLONG.out.versions)
-    // If reads already fall below target after filtering, results are not added to multiqc report
-    ch_multiqc_files = ch_multiqc_files.mix(FILTLONG.out.log.collect{it[1]}.ifEmpty([]))
+    // //
+    // // MODULE: Run filtlong
+    // //
+    // FILTLONG ( 
+    //     PORECHOP_PORECHOP.out.reads.map { meta, reads -> [ meta, [], reads ] }
+    // )
+    // ch_versions = ch_versions.mix(FILTLONG.out.versions)
+    // // If reads already fall below target after filtering, results are not added to multiqc report
+    // ch_multiqc_files = ch_multiqc_files.mix(FILTLONG.out.log.collect{it[1]}.ifEmpty([]))
 
-    //
-    // MODULE: Run FastQC on QCed reads
-    //
-    FASTQC_PASS (
-        FILTLONG.out.reads
-    )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PASS.out.zip.collect{it[1]}.ifEmpty([]))
-    ch_versions = ch_versions.mix(FASTQC_PASS.out.versions.first())
+    // //
+    // // MODULE: Run FastQC on QCed reads
+    // //
+    // FASTQC_PASS (
+    //     FILTLONG.out.reads
+    // )
+    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PASS.out.zip.collect{it[1]}.ifEmpty([]))
+    // ch_versions = ch_versions.mix(FASTQC_PASS.out.versions.first())
 
     // ================================================================
     // CONDITIONAL ROUTING: Host depletion vs Amplicon data
@@ -88,7 +88,8 @@ workflow UVAGINOME {
     if (params.amplicon) {
         log.info "Amplicon data: Skipping host depletion"
         // For amplicon data, use QC-passed reads directly
-        ch_analysis_ready_reads = FILTLONG.out.reads
+        // ch_analysis_ready_reads = FILTLONG.out.reads
+        ch_analysis_ready_reads = ch_samplesheet
         
     } else {
         log.info "Metagenomic data: Running host depletion"
@@ -96,7 +97,7 @@ workflow UVAGINOME {
         // SUBWORKFLOW: Run host depletion on non-amplicon reads
         //
         HOST_DEPLETION(
-            FILTLONG.out.reads
+            ch_samplesheet
         )
         ch_versions = ch_versions.mix(HOST_DEPLETION.out.versions)
         ch_multiqc_files = ch_multiqc_files.mix(HOST_DEPLETION.out.multiqc_files)
