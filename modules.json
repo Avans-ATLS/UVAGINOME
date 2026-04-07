@@ -5,6 +5,11 @@
         "https://github.com/nf-core/modules.git": {
             "modules": {
                 "nf-core": {
+                    "emu/abundance": {
+                        "branch": "master",
+                        "git_sha": "e258acc5bf94de85bf8d8a8efc76fbdeab3b6abb",
+                        "installed_by": ["modules"]
+                    },
                     "fastqc": {
                         "branch": "master",
                         "git_sha": "79b36b51048048374b642289bfe9e591ef56fe05",

@@ -41,7 +41,8 @@
                 "kraken2_db": {
                     "type": "string",
                     "fa_icon": "fas fa-database",
-                    "description": "Path to Kraken2 database for taxonomic classification."
+                    "description": "Path to Kraken2 database for taxonomic classification.",
+                    "default": "/home/birgit/db_ref/dbs/kraken2/181125_standard/"
                 }
             },
             "fa_icon": "fas fa-server"
@@ -226,7 +227,15 @@
     ],
     "properties": {
         "hostile_index": {
-            "type": "string"
+            "type": "string",
+            "default": "/home/birgit/db_ref/hostile_humt2thla/"
+        },
+        "emu": {
+            "type": "boolean"
+        },
+        "emu_db": {
+            "type": "string",
+            "default": "/home/birgit/db_ref/emu_16S-01-04-26/"
         }
     }
 }

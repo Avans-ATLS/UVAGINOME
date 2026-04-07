@@ -4,6 +4,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 include { FASTQC as FASTQC_RAW                                      } from '../modules/nf-core/fastqc/main' 
+include { EMU_ABUNDANCE                                             } from '../modules/nf-core/emu/abundance/main'
+include { EMU_COMBINEREPORTS                                        } from '../modules/local/emu/combinereports/main'
 include { KRAKEN2_BUILDSTANDARD                                     } from '../modules/nf-core/kraken2/buildstandard/main'
 include { KRAKEN2_KRAKEN2                                           } from '../modules/nf-core/kraken2/kraken2/main'
 include { KRAKENTOOLS_KREPORT2KRONA as KRAKENTOOLS_KREPORT2KRONA_KR } from '../modules/nf-core/krakentools/kreport2krona/main'
@@ -72,49 +74,68 @@ workflow UVAGINOME {
         ch_analysis_ready_reads = HOST_DEPLETION.out.reads
     }
 
-    // // Check if Kraken2 database is provided
-    // if (!params.kraken2_db) {
-    //     //
-    //     // MODULE: Run Kraken2 buildstandard
-    //     //
-    //     KRAKEN2_BUILDSTANDARD (
-    //         false
-    //     )
-    //     ch_versions = ch_versions.mix(KRAKEN2_BUILDSTANDARD.out.versions)
-    //     ch_kraken2_db = KRAKEN2_BUILDSTANDARD.out.db
-    // }
-    // else {
-    //     // Use provided Kraken2 database
-    //     ch_kraken2_db = Channel.value([params.kraken2_db])
-    // }
+    // Check if users wants to use EMU or Kraken2 for abundance estimation
+    if (params.emu) {
+        log.info "Using EMU for abundance estimation"
+        //
+        // MODULE: Run EMU for abundance estimation
+        //
+        EMU_ABUNDANCE (
+            ch_analysis_ready_reads,
+            params.emu_db
+        )
 
-    // 
-    // MODULE: Run Kraken2
-    //
-    KRAKEN2_KRAKEN2 (
-        ch_analysis_ready_reads,
-        ch_kraken2_db,
-        false,
-        false
-    )
-    // ch_versions = ch_versions.mix(KRAKEN2_KRAKEN2.out.versions_kraken2.first())
-    ch_multiqc_files = ch_multiqc_files.mix(KRAKEN2_KRAKEN2.out.report.collect{it[1]}.ifEmpty([]))
+        // 
+        // MODULE: Run EMU combine reports to get combined abundance report
+        //
+        EMU_COMBINEREPORTS (
+            EMU_ABUNDANCE.out.report.map { meta, report -> report }.collect()
+        )
 
-    //
-    // MODULE: Run KrakenTools kreport2krona for kraken2
-    //
-    KRAKENTOOLS_KREPORT2KRONA_KR (
-        KRAKEN2_KRAKEN2.out.report
-    )
-    ch_versions = ch_versions.mix(KRAKENTOOLS_KREPORT2KRONA_KR.out.versions)
+    } else {
+        log.info "Using Kraken2 for taxonomic classification and abundance estimation"
+        // // Check if Kraken2 database is provided
+        // if (!params.kraken2_db) {
+        //     //
+        //     // MODULE: Run Kraken2 buildstandard
+        //     //
+        //     KRAKEN2_BUILDSTANDARD (
+        //         false
+        //     )
+        //     ch_versions = ch_versions.mix(KRAKEN2_BUILDSTANDARD.out.versions)
+        //     ch_kraken2_db = KRAKEN2_BUILDSTANDARD.out.db
+        // }
+        // else {
+        //     // Use provided Kraken2 database
+        //     ch_kraken2_db = Channel.value([params.kraken2_db])
+        // }
 
-    //
-    // MODULE: Run Krona ktimporttext for kraken2
-    //
-    KRONA_KTIMPORTTEXT_KR (
-        KRAKENTOOLS_KREPORT2KRONA_KR.out.txt
-    )
-    // ch_versions = ch_versions.mix(KRONA_KTIMPORTTEXT_KR.out.versions_krona)
+        // 
+        // MODULE: Run Kraken2
+        //
+        KRAKEN2_KRAKEN2 (
+            ch_analysis_ready_reads,
+            ch_kraken2_db,
+            false,
+            false
+        )
+        ch_multiqc_files = ch_multiqc_files.mix(KRAKEN2_KRAKEN2.out.report.collect{it[1]}.ifEmpty([]))
+
+        //
+        // MODULE: Run KrakenTools kreport2krona for kraken2
+        //
+        KRAKENTOOLS_KREPORT2KRONA_KR (
+            KRAKEN2_KRAKEN2.out.report
+        )
+        ch_versions = ch_versions.mix(KRAKENTOOLS_KREPORT2KRONA_KR.out.versions)
+
+        //
+        // MODULE: Run Krona ktimporttext for kraken2
+        //
+        KRONA_KTIMPORTTEXT_KR (
+            KRAKENTOOLS_KREPORT2KRONA_KR.out.txt
+        )
+    }
 
     //
     // Collate and save software versions

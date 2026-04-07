@@ -39,8 +39,7 @@ workflow HOST_DEPLETION {
     if (params.hostile_index) {
         log.info "Using user-provided hostile index: ${params.hostile_index}"
         ch_hostile_index = Channel
-            .fromPath(params.hostile_index, checkIfExists: true)
-            .map { file -> tuple("human-t2t-hla", file) }
+            .value(tuple("human-t2t-hla", file(params.hostile_index, checkIfExists: true)))
     } else {
         log.info "No hostile index provided. Fetching host genome from NCBI using Hostile fetch."
         HOSTILE_FETCH(

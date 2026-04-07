@@ -1,0 +1,53 @@
+name: "emu_combinereports"
+description: "Combine EMU reports into a single report for all samples"
+keywords:
+  - metagenomics
+  - 16S
+  - nanopore
+tools:
+  - emu:
+      description: Emu is a relative abundance estimator for 16s genomic data.
+      homepage: https://gitlab.com/treangenlab/emu
+      documentation: https://gitlab.com/treangenlab/emu
+      doi: 10.1038/s41592-022-01520-4
+      licence: ["MIT"]
+      identifier: biotools:emu
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [ id:'test', single_end:false ]
+    - reports:
+        type: file
+        description: List of EMU reports to combine. Each report should be a tsv file containing relative abundances for a sample.
+        pattern: "*.{tsv}"
+        ontologies: []
+output:
+  combined_report:
+    type: file
+    description: A tsv file containing the combined relative abundances for all samples.
+    pattern: "*{.tsv}"
+  versions_emu:
+    - - ${task.process}:
+          type: string
+          description: The process the versions were collected from
+      - emu:
+          type: string
+          description: The tool name
+      - 'emu --version 2>&1 | sed "s/^.*emu //; s/Using.*$//"':
+          type: eval
+          description: The expression to obtain the version of the tool
+topics:
+  versions:
+    - - "${task.process}":
+          type: string
+          description: The name of the process
+      - emu:
+          type: string
+          description: The name of the tool
+      - 'emu --version 2>&1 | sed "s/^.*emu //; s/Using.*$//"':
+          type: eval
+          description: The expression to obtain the version of the tool
+authors:
+  - "@birgitrijvers"
