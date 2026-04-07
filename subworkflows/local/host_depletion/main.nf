@@ -3,7 +3,7 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { HOSTILE_FETCH                 } from '../modules/nf-core/hostile/fetch/main'  
+include { HOSTILE_FETCH                 } from '../../../modules/nf-core/hostile/fetch/main'  
 include { HOSTILE_CLEAN                 } from '../../../modules/nf-core/hostile/clean/main' 
 include { FASTQC as FASTQC_MAPPED       } from '../../../modules/nf-core/fastqc/main'
 
@@ -38,12 +38,13 @@ workflow HOST_DEPLETION {
     // Check if hostile index is provided by user
     if (params.hostile_index) {
         log.info "Using user-provided hostile index: ${params.hostile_index}"
-        ch_hostile_index = Channel.fromPath(params.hostile_index, checkIfExists: true)
-            .map{ it -> [it[0].getSimpleName(), it[0]] }
+        ch_hostile_index = Channel
+            .fromPath(params.hostile_index, checkIfExists: true)
+            .map { file -> tuple("human-t2t-hla", file) }
     } else {
         log.info "No hostile index provided. Fetching host genome from NCBI using Hostile fetch."
         HOSTILE_FETCH(
-            "human-t2t"
+            "human-t2t-hla"
             // minimap2 index arg in conf/modules.config
         )
         ch_versions = ch_versions.mix(HOSTILE_FETCH.out.versions)
@@ -67,7 +68,7 @@ workflow HOST_DEPLETION {
         ch_hostile_out
     )
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_MAPPED.out.zip.collect{it[1]}.ifEmpty([]))
-    ch_versions = ch_versions.mix(FASTQC_MAPPED.out.versions.first())
+    // ch_versions = ch_versions.mix(FASTQC_MAPPED.out.versions_fastqc.first())
 
     emit:
     reads = ch_hostile_out // host depleted reads

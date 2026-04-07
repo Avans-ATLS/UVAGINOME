@@ -20,7 +20,7 @@
                 },
                 "qc_targetbases": {
                     "type": "integer",
-                    "default": 1000000,
+                    "default": 10000000,
                     "fa_icon": "fas fa-bullseye",
                     "description": "Filtlong: Keep only the best reads up to this many total bases(unit suffixes: k, kb, m, mb, g, gb)."
                 },
@@ -38,27 +38,10 @@
             "description": "",
             "default": "",
             "properties": {
-                "fasta": {
-                    "type": "string",
-                    "default": "/home/birgit/db_ref/ref_genomes/GCF_000001405.26_GRCh38_genomic.fna",
-                    "fa_icon": "fas fa-dna",
-                    "description": "Path to host reference genome fasta to perform host depletion."
-                },
-                "minimap2_index": {
-                    "type": "string",
-                    "fa_icon": "fas fa-file",
-                    "description": "Path to minimap2 index of host reference genome to perform host depletion.",
-                    "default": "/home/birgit/db_ref/dbs/mmap2/GRCh38.mmi"
-                },
                 "kraken2_db": {
                     "type": "string",
                     "fa_icon": "fas fa-database",
                     "description": "Path to Kraken2 database for taxonomic classification."
-                },
-                "bracken_db": {
-                    "type": "string",
-                    "fa_icon": "fas fa-database",
-                    "description": "Path to Bracken database for re-calculation of taxonomic classification results."
                 }
             },
             "fa_icon": "fas fa-server"
@@ -240,5 +223,10 @@
         {
             "$ref": "#/$defs/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "hostile_index": {
+            "type": "string"
+        }
+    }
 }
