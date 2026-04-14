@@ -19,7 +19,7 @@ process EMU_COMBINEREPORTS {
 
     script:
     def args = task.ext.args ?: ''
-    def rank = task.ext.rank ?: 'species'
+    def rank = task.ext.rank ?: 'tax_id'
     """
     emu \\
         combine-outputs \\
@@ -29,7 +29,7 @@ process EMU_COMBINEREPORTS {
     """
 
     stub:
-    def rank = task.ext.rank ?: 'species'
+    def rank = task.ext.rank ?: 'tax_id'
     """
     touch emu_reports/emu-combined-${rank}.tsv
     """
