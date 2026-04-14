@@ -8,10 +8,10 @@ process EMU_COMBINEREPORTS {
         : 'community.wave.seqera.io/library/emu:3.6.2--0adcfa4809f061f6'}"
 
     input:
-    path(reports, stageAs: "emu_combined/*")
+    path(reports, stageAs: "reports/*")
 
     output:
-    path "emu_combined/emu-combined-*.tsv", emit: combined_report
+    path "emu-combined-*.tsv", emit: combined_report
     tuple val("${task.process}"), val('emu'), eval('emu --version 2>&1 | sed "s/^.*emu //; s/Using.*$//"'), topic: versions, emit: versions_emu
 
     when:
@@ -21,16 +21,22 @@ process EMU_COMBINEREPORTS {
     def args = task.ext.args ?: ''
     def rank = task.ext.rank ?: 'tax_id'
     """
+    mkdir -p input_reports
+    mv reports/* input_reports/ 2>/dev/null || true
+    
     emu \\
         combine-outputs \\
         ${args} \\
-        emu_reports \\
+        input_reports \\
         ${rank}
+    
+    # Move output to work dir root for easy collection
+    mv input_reports/emu-combined-*.tsv .
     """
 
     stub:
     def rank = task.ext.rank ?: 'tax_id'
     """
-    touch emu_reports/emu-combined-${rank}.tsv
+    touch emu-combined-${rank}.tsv
     """
 }
