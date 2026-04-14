@@ -20,7 +20,7 @@
                 },
                 "qc_targetbases": {
                     "type": "integer",
-                    "default": 1000000,
+                    "default": 10000000,
                     "fa_icon": "fas fa-bullseye",
                     "description": "Filtlong: Keep only the best reads up to this many total bases(unit suffixes: k, kb, m, mb, g, gb)."
                 },
@@ -32,33 +32,47 @@
                 }
             }
         },
+        "classifier_options": {
+            "title": "Classifier options",
+            "type": "object",
+            "description": "",
+            "default": "",
+            "properties": {
+                "amplicon": {
+                    "type": "boolean",
+                    "fa_icon": "fas fa-bullseye",
+                    "description": "Flag to skip host-depletion for targeted/amplicon data.",
+                    "default": true
+                },
+                "emu": {
+                    "type": "boolean",
+                    "description": "Use emu as classifier. Default is to use Kraken2",
+                    "fa_icon": "fas fa-crow"
+                }
+            }
+        },
         "database_reference_options": {
             "title": "Database/reference options",
             "type": "object",
             "description": "",
             "default": "",
             "properties": {
-                "fasta": {
+                "hostile_index": {
                     "type": "string",
-                    "default": "/home/birgit/db_ref/ref_genomes/GCF_000001405.26_GRCh38_genomic.fna",
-                    "fa_icon": "fas fa-dna",
-                    "description": "Path to host reference genome fasta to perform host depletion."
-                },
-                "minimap2_index": {
-                    "type": "string",
-                    "fa_icon": "fas fa-file",
-                    "description": "Path to minimap2 index of host reference genome to perform host depletion.",
-                    "default": "/home/birgit/db_ref/dbs/mmap2/GRCh38.mmi"
+                    "default": "/home/birgit/db_ref/hostile_humt2thla/",
+                    "description": "Optional pre-built index for hostile host depletion.",
+                    "fa_icon": "fas fa-user"
                 },
                 "kraken2_db": {
                     "type": "string",
                     "fa_icon": "fas fa-database",
-                    "description": "Path to Kraken2 database for taxonomic classification."
+                    "description": "Path to Kraken2 database for taxonomic classification.",
+                    "default": "/home/birgit/db_ref/dbs/kraken2/181125_standard/"
                 },
-                "bracken_db": {
+                "emu_db": {
                     "type": "string",
-                    "fa_icon": "fas fa-database",
-                    "description": "Path to Bracken database for re-calculation of taxonomic classification results."
+                    "default": "/home/birgit/db_ref/emu_16S-01-04-26/",
+                    "fa_icon": "fas fa-feather-alt"
                 }
             },
             "fa_icon": "fas fa-server"
@@ -70,11 +84,6 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "required": ["input", "outdir"],
             "properties": {
-                "amplicon": {
-                    "type": "boolean",
-                    "fa_icon": "fas fa-bullseye",
-                    "description": "Flag to skip host-depletion for targeted/amplicon data."
-                },
                 "input": {
                     "type": "string",
                     "format": "file-path",
@@ -227,6 +236,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/quality_control_options"
+        },
+        {
+            "$ref": "#/$defs/classifier_options"
         },
         {
             "$ref": "#/$defs/database_reference_options"
